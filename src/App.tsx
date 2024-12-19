@@ -10,52 +10,65 @@ import Tasks from "@/pages/Tasks";
 import Calendar from "@/pages/Calendar";
 import Settings from "@/pages/Settings";
 import SignUp from "@/pages/SignUp";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 const App = () => (
-  <AuthProvider>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route
-            path="/"
-            element={
-              <Layout>
-                <Dashboard />
-              </Layout>
-            }
-          />
-          <Route
-            path="/tasks"
-            element={
-              <Layout>
-                <Tasks />
-              </Layout>
-            }
-          />
-          <Route
-            path="/calendar"
-            element={
-              <Layout>
-                <Calendar />
-              </Layout>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <Layout>
-                <Settings />
-              </Layout>
-            }
-          />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </AuthProvider>
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route
+              path="/"
+              element={
+                <Layout>
+                  <Dashboard />
+                </Layout>
+              }
+            />
+            <Route
+              path="/tasks"
+              element={
+                <Layout>
+                  <Tasks />
+                </Layout>
+              }
+            />
+            <Route
+              path="/calendar"
+              element={
+                <Layout>
+                  <Calendar />
+                </Layout>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <Layout>
+                  <Settings />
+                </Layout>
+              }
+            />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
+  </QueryClientProvider>
 );
 
 export default App;
