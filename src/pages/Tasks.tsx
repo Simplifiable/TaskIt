@@ -1,15 +1,16 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { TaskForm } from "@/components/TaskForm";
-import { collection, query, where, getDocs, updateDoc, doc } from "firebase/firestore";
+import { collection, query, where, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { format, parseISO, isBefore, formatDistanceToNow } from "date-fns";
-import { CheckCircle2, Circle, Search } from "lucide-react";
+import { CheckCircle2, Circle, Search, Pencil, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Task {
   id: string;
@@ -22,33 +23,32 @@ interface Task {
 
 export default function Tasks() {
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isEditTaskOpen, setIsEditTaskOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const fetchTasks = async () => {
-    if (!user) return;
-    
-    const q = query(collection(db, "tasks"), where("userId", "==", user.uid));
-    const querySnapshot = await getDocs(q);
-    const tasksData = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as Task));
-    
-    setTasks(tasksData);
-  };
-
-  useEffect(() => {
-    fetchTasks();
-  }, [user]);
+  const { data: tasks = [] } = useQuery({
+    queryKey: ['tasks', user?.uid],
+    queryFn: async () => {
+      if (!user) return [];
+      const q = query(collection(db, "tasks"), where("userId", "==", user.uid));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Task[];
+    },
+    enabled: !!user
+  });
 
   const handleTaskComplete = async (taskId: string, completed: boolean) => {
     try {
       const taskRef = doc(db, "tasks", taskId);
       await updateDoc(taskRef, { completed: !completed });
-      await fetchTasks();
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
       toast({
         title: completed ? "Task marked as incomplete" : "Task marked as complete",
         description: "Task status updated successfully",
@@ -60,6 +60,28 @@ export default function Tasks() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleDeleteTask = async (taskId: string) => {
+    try {
+      await deleteDoc(doc(db, "tasks", taskId));
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      toast({
+        title: "Task deleted",
+        description: "Task has been deleted successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete task",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setIsEditTaskOpen(true);
   };
 
   const filteredTasks = tasks.filter(task => 
@@ -102,18 +124,33 @@ export default function Tasks() {
             </span>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => handleTaskComplete(task.id, task.completed)}
-          className="shrink-0"
-        >
-          {task.completed ? (
-            <CheckCircle2 className="h-5 w-5 text-primary" />
-          ) : (
-            <Circle className="h-5 w-5" />
-          )}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleTaskComplete(task.id, task.completed)}
+          >
+            {task.completed ? (
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+            ) : (
+              <Circle className="h-5 w-5" />
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleEditTask(task)}
+          >
+            <Pencil className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleDeleteTask(task.id)}
+          >
+            <Trash2 className="h-5 w-5 text-destructive" />
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -166,8 +203,27 @@ export default function Tasks() {
           </DialogHeader>
           <TaskForm onClose={() => {
             setIsAddTaskOpen(false);
-            fetchTasks();
+            queryClient.invalidateQueries({ queryKey: ['tasks'] });
           }} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditTaskOpen} onOpenChange={setIsEditTaskOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Task</DialogTitle>
+            <DialogDescription>
+              Update the task details below.
+            </DialogDescription>
+          </DialogHeader>
+          <TaskForm
+            task={editingTask}
+            onClose={() => {
+              setIsEditTaskOpen(false);
+              setEditingTask(null);
+              queryClient.invalidateQueries({ queryKey: ['tasks'] });
+            }}
+          />
         </DialogContent>
       </Dialog>
     </div>

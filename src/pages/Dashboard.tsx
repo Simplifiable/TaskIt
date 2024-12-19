@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { format, isToday, isTomorrow, isBefore, parseISO, formatDistanceToNow } from "date-fns";
 import { CheckCircle2, Circle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface Task {
   id: string;
@@ -21,32 +22,29 @@ interface Task {
 
 export default function Dashboard() {
   const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
-  const [tasks, setTasks] = useState<Task[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const fetchTasks = async () => {
-    if (!user) return;
-    
-    const q = query(collection(db, "tasks"), where("userId", "==", user.uid));
-    const querySnapshot = await getDocs(q);
-    const tasksData = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    } as Task));
-    
-    setTasks(tasksData);
-  };
-
-  useEffect(() => {
-    fetchTasks();
-  }, [user]);
+  const { data: tasks = [] } = useQuery({
+    queryKey: ['tasks', user?.uid],
+    queryFn: async () => {
+      if (!user) return [];
+      const q = query(collection(db, "tasks"), where("userId", "==", user.uid));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as Task[];
+    },
+    enabled: !!user
+  });
 
   const handleTaskComplete = async (taskId: string, completed: boolean) => {
     try {
       const taskRef = doc(db, "tasks", taskId);
       await updateDoc(taskRef, { completed: !completed });
-      await fetchTasks();
+      queryClient.invalidateQueries({ queryKey: ['tasks'] });
       toast({
         title: completed ? "Task marked as incomplete" : "Task marked as complete",
         description: "Task status updated successfully",
@@ -109,7 +107,14 @@ export default function Dashboard() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <div>
+          <h1 className="text-2xl font-bold">
+            Hello, {user?.displayName || 'User'}
+          </h1>
+          <p className="text-muted-foreground">
+            Today is {format(new Date(), 'EEEE, MMMM d, yyyy')}
+          </p>
+        </div>
         <Button onClick={() => setIsAddTaskOpen(true)}>Add Task</Button>
       </div>
 
@@ -173,7 +178,7 @@ export default function Dashboard() {
           </DialogHeader>
           <TaskForm onClose={() => {
             setIsAddTaskOpen(false);
-            fetchTasks();
+            queryClient.invalidateQueries({ queryKey: ['tasks'] });
           }} />
         </DialogContent>
       </Dialog>

@@ -82,13 +82,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                className="text-foreground"
+              >
                 {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
               </Button>
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" className="text-foreground">
                 <Bell size={20} />
               </Button>
-              <Button variant="ghost" size="icon" onClick={handleLogout}>
+              <Button variant="ghost" size="icon" onClick={handleLogout} className="text-foreground">
                 <LogOut size={20} />
               </Button>
             </div>
