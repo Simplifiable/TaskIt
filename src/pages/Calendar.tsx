@@ -1,11 +1,10 @@
-import { useState } from "react";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, parseISO, startOfMonth, endOfMonth } from "date-fns";
 
 interface Task {
   id: string;
@@ -17,7 +16,6 @@ interface Task {
 }
 
 export default function Calendar() {
-  const [date, setDate] = useState<Date | undefined>(new Date());
   const { user } = useAuth();
 
   const { data: tasks = [] } = useQuery({
@@ -34,45 +32,71 @@ export default function Calendar() {
     enabled: !!user
   });
 
-  const selectedDateTasks = tasks.filter(task => 
-    task.dueDate === (date ? format(date, 'yyyy-MM-dd') : '')
-  );
+  const today = new Date();
+  const firstDay = startOfMonth(today);
+  const lastDay = endOfMonth(today);
+
+  const groupedTasks = tasks.reduce((acc, task) => {
+    const date = task.dueDate;
+    if (!acc[date]) {
+      acc[date] = [];
+    }
+    acc[date].push(task);
+    return acc;
+  }, {} as Record<string, Task[]>);
+
+  const modifiers = {
+    hasTasks: (date: Date) => {
+      const dateStr = format(date, 'yyyy-MM-dd');
+      return !!groupedTasks[dateStr]?.length;
+    }
+  };
+
+  const modifiersStyles = {
+    hasTasks: {
+      backgroundColor: 'var(--primary)',
+      color: 'white',
+      borderRadius: '50%'
+    }
+  };
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold mb-6">Calendar</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
-          <CardContent className="pt-6">
+      <div className="grid gap-6">
+        <Card className="p-4">
+          <CardContent className="p-0">
             <CalendarComponent
               mode="single"
-              selected={date}
-              onSelect={setDate}
+              modifiers={modifiers}
+              modifiersStyles={modifiersStyles}
               className="rounded-md border"
+              components={{
+                DayContent: ({ date }) => {
+                  const dateStr = format(date, 'yyyy-MM-dd');
+                  const dayTasks = groupedTasks[dateStr] || [];
+                  
+                  return (
+                    <div className="w-full h-full min-h-[100px] p-2">
+                      <div className="text-sm font-medium">
+                        {format(date, 'd')}
+                      </div>
+                      <div className="mt-1 space-y-1">
+                        {dayTasks.map((task) => (
+                          <div
+                            key={task.id}
+                            className="text-xs p-1 rounded bg-primary/10 truncate"
+                            title={task.title}
+                          >
+                            {task.title}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                },
+              }}
             />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <h2 className="text-lg font-semibold mb-4">
-              Tasks for {date ? format(date, 'MMMM d, yyyy') : 'Selected Date'}
-            </h2>
-            <div className="space-y-4">
-              {selectedDateTasks.map(task => (
-                <div key={task.id} className="p-4 border rounded-lg">
-                  <h3 className="font-medium">{task.title}</h3>
-                  {task.description && (
-                    <p className="text-sm text-muted-foreground mt-1">{task.description}</p>
-                  )}
-                  <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary mt-2 inline-block">
-                    {task.tag}
-                  </span>
-                </div>
-              ))}
-              {selectedDateTasks.length === 0 && (
-                <p className="text-muted-foreground">No tasks for this date</p>
-              )}
-            </div>
           </CardContent>
         </Card>
       </div>

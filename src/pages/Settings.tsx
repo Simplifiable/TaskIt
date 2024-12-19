@@ -5,15 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateProfile } from "firebase/auth";
-import { storage } from "@/lib/firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useToast } from "@/hooks/use-toast";
 import { useTheme } from "next-themes";
 
 export default function Settings() {
   const { user } = useAuth();
   const [displayName, setDisplayName] = useState(user?.displayName || "");
-  const [file, setFile] = useState<File | null>(null);
   const { toast } = useToast();
   const { theme, setTheme } = useTheme();
 
@@ -21,17 +18,8 @@ export default function Settings() {
     if (!user) return;
 
     try {
-      let photoURL = user.photoURL;
-
-      if (file) {
-        const imageRef = ref(storage, `profile-pictures/${user.uid}`);
-        const snapshot = await uploadBytes(imageRef, file);
-        photoURL = await getDownloadURL(snapshot.ref);
-      }
-
       await updateProfile(user, {
         displayName,
-        photoURL
       });
 
       toast({
@@ -42,19 +30,6 @@ export default function Settings() {
       toast({
         title: "Error",
         description: "Failed to update profile",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile && selectedFile.size <= 400 * 1024) { // 400KB max
-      setFile(selectedFile);
-    } else {
-      toast({
-        title: "Error",
-        description: "File size must be less than 400KB",
         variant: "destructive"
       });
     }
@@ -76,18 +51,6 @@ export default function Settings() {
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Enter your display name"
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="picture">Profile Picture</Label>
-            <Input
-              id="picture"
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-            />
-            <p className="text-sm text-muted-foreground">
-              Maximum file size: 400KB
-            </p>
           </div>
           <Button onClick={handleUpdateProfile}>
             Update Profile
