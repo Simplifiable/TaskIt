@@ -1,15 +1,34 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
-import { Navigate, useLocation } from "react-router-dom";
-import { Bell, Calendar, Home, Settings, CheckSquare } from "lucide-react";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Bell, Calendar, Home, Settings, CheckSquare, LogOut, Sun, Moon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { auth } from "@/lib/firebase";
+import { signOut } from "firebase/auth";
+import { useTheme } from "next-themes";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      navigate("/login");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
 
   return (
     <SidebarProvider>
@@ -56,10 +75,16 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </SidebarContent>
         </Sidebar>
         <main className="flex-1 p-6">
-          <div className="flex justify-end mb-6">
-            <button className="p-2 hover:bg-gray-100 rounded-full">
+          <div className="flex justify-end items-center gap-4 mb-6">
+            <Button variant="ghost" size="icon" onClick={toggleTheme}>
+              {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+            </Button>
+            <Button variant="ghost" size="icon">
               <Bell size={20} />
-            </button>
+            </Button>
+            <Button variant="ghost" size="icon" onClick={handleLogout}>
+              <LogOut size={20} />
+            </Button>
           </div>
           {children}
         </main>
