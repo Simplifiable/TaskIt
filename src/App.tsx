@@ -11,6 +11,7 @@ import Calendar from "@/pages/Calendar";
 import Settings from "@/pages/Settings";
 import SignUp from "@/pages/SignUp";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { SidebarProvider } from "@/components/ui/sidebar";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -29,42 +30,44 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route
-              path="/"
-              element={
-                <Layout>
-                  <Dashboard />
-                </Layout>
-              }
-            />
-            <Route
-              path="/tasks"
-              element={
-                <Layout>
-                  <Tasks />
-                </Layout>
-              }
-            />
-            <Route
-              path="/calendar"
-              element={
-                <Layout>
-                  <Calendar />
-                </Layout>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <Layout>
-                  <Settings />
-                </Layout>
-              }
-            />
-          </Routes>
+          <SidebarProvider>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route
+                path="/"
+                element={
+                  <Layout>
+                    <Dashboard />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/tasks"
+                element={
+                  <Layout>
+                    <Tasks />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/calendar"
+                element={
+                  <Layout>
+                    <Calendar />
+                  </Layout>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <Layout>
+                    <Settings />
+                  </Layout>
+                }
+              />
+            </Routes>
+          </SidebarProvider>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
