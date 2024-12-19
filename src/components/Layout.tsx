@@ -1,7 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { SidebarProvider, Sidebar, SidebarContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import { Bell, Calendar, Home, Settings, CheckSquare, LogOut, Sun, Moon } from "lucide-react";
+import { Bell, Calendar, Home, Settings, CheckSquare, LogOut, Sun, Moon, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/firebase";
 import { signOut } from "firebase/auth";
@@ -26,9 +26,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
-  };
+  const showBackButton = location.pathname !== "/";
 
   return (
     <SidebarProvider>
@@ -75,16 +73,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </SidebarContent>
         </Sidebar>
         <main className="flex-1 p-6">
-          <div className="flex justify-end items-center gap-4 mb-6">
-            <Button variant="ghost" size="icon" onClick={toggleTheme}>
-              {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
-            </Button>
-            <Button variant="ghost" size="icon">
-              <Bell size={20} />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={handleLogout}>
-              <LogOut size={20} />
-            </Button>
+          <div className="flex justify-between items-center gap-4 mb-6">
+            <div className="flex items-center gap-2">
+              {showBackButton && (
+                <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+                  <ArrowLeft size={20} />
+                </Button>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+                {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+              </Button>
+              <Button variant="ghost" size="icon">
+                <Bell size={20} />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={handleLogout}>
+                <LogOut size={20} />
+              </Button>
+            </div>
           </div>
           {children}
         </main>
