@@ -14,11 +14,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 
-// Create a client
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 1000 * 60 * 5,
       refetchOnWindowFocus: false,
     },
   },
@@ -26,7 +25,7 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
@@ -36,38 +35,10 @@ const App = () => (
               <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
-                <Route
-                  path="/"
-                  element={
-                    <Layout>
-                      <Dashboard />
-                    </Layout>
-                  }
-                />
-                <Route
-                  path="/tasks"
-                  element={
-                    <Layout>
-                      <Tasks />
-                    </Layout>
-                  }
-                />
-                <Route
-                  path="/calendar"
-                  element={
-                    <Layout>
-                      <Calendar />
-                    </Layout>
-                  }
-                />
-                <Route
-                  path="/settings"
-                  element={
-                    <Layout>
-                      <Settings />
-                    </Layout>
-                  }
-                />
+                <Route path="/" element={<Layout><Dashboard /></Layout>} />
+                <Route path="/tasks" element={<Layout><Tasks /></Layout>} />
+                <Route path="/calendar" element={<Layout><Calendar /></Layout>} />
+                <Route path="/settings" element={<Layout><Settings /></Layout>} />
               </Routes>
             </SidebarProvider>
           </BrowserRouter>

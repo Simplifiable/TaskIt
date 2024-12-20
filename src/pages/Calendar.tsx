@@ -4,7 +4,9 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
-import { format, parseISO, startOfMonth, endOfMonth } from "date-fns";
+import { format, parseISO } from "date-fns";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState } from "react";
 
 interface Task {
   id: string;
@@ -17,6 +19,7 @@ interface Task {
 
 export default function Calendar() {
   const { user } = useAuth();
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['tasks', user?.uid],
@@ -32,10 +35,6 @@ export default function Calendar() {
     enabled: !!user
   });
 
-  const today = new Date();
-  const firstDay = startOfMonth(today);
-  const lastDay = endOfMonth(today);
-
   const groupedTasks = tasks.reduce((acc, task) => {
     const date = task.dueDate;
     if (!acc[date]) {
@@ -45,61 +44,89 @@ export default function Calendar() {
     return acc;
   }, {} as Record<string, Task[]>);
 
-  const modifiers = {
-    hasTasks: (date: Date) => {
-      const dateStr = format(date, 'yyyy-MM-dd');
-      return !!groupedTasks[dateStr]?.length;
-    }
-  };
-
-  const modifiersStyles = {
-    hasTasks: {
-      backgroundColor: 'var(--primary)',
-      color: 'white',
-      borderRadius: '50%'
-    }
-  };
-
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold mb-6">Calendar</h1>
-      <div className="grid gap-6">
-        <Card className="p-4">
-          <CardContent className="p-0">
-            <CalendarComponent
-              mode="single"
-              modifiers={modifiers}
-              modifiersStyles={modifiersStyles}
-              className="rounded-md border"
-              components={{
-                DayContent: ({ date }) => {
-                  const dateStr = format(date, 'yyyy-MM-dd');
-                  const dayTasks = groupedTasks[dateStr] || [];
-                  
-                  return (
-                    <div className="w-full h-full min-h-[100px] p-2">
-                      <div className="text-sm font-medium">
-                        {format(date, 'd')}
-                      </div>
-                      <div className="mt-1 space-y-1">
-                        {dayTasks.map((task) => (
-                          <div
-                            key={task.id}
-                            className="text-xs p-1 rounded bg-primary/10 truncate"
-                            title={task.title}
-                          >
-                            {task.title}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                },
-              }}
-            />
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Calendar</h1>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => {
+              const newDate = new Date(currentMonth);
+              newDate.setMonth(newDate.getMonth() - 1);
+              setCurrentMonth(newDate);
+            }}
+            className="p-2 hover:bg-accent rounded-full"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <span className="text-lg font-medium">
+            {format(currentMonth, 'MMMM yyyy')}
+          </span>
+          <button
+            onClick={() => {
+              const newDate = new Date(currentMonth);
+              newDate.setMonth(newDate.getMonth() + 1);
+              setCurrentMonth(newDate);
+            }}
+            className="p-2 hover:bg-accent rounded-full"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
       </div>
+      <Card className="border rounded-lg overflow-hidden">
+        <CardContent className="p-0">
+          <div className="grid grid-cols-7 text-sm font-medium border-b">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+              <div key={day} className="p-4 text-center border-r last:border-r-0">
+                {day}
+              </div>
+            ))}
+          </div>
+          <CalendarComponent
+            mode="single"
+            month={currentMonth}
+            className="w-full border-none"
+            classNames={{
+              months: "w-full",
+              month: "w-full space-y-4",
+              caption: "hidden",
+              table: "w-full border-collapse",
+              head_row: "hidden",
+              row: "grid grid-cols-7 divide-x",
+              cell: "min-h-[120px] p-2 relative border-t first:border-l",
+              day: "absolute top-2 left-2 font-normal",
+              day_selected: "bg-transparent text-foreground hover:bg-transparent hover:text-foreground",
+              day_today: "bg-transparent text-primary font-bold hover:bg-transparent",
+            }}
+            components={{
+              DayContent: ({ date }) => {
+                const dateStr = format(date, 'yyyy-MM-dd');
+                const dayTasks = groupedTasks[dateStr] || [];
+                
+                return (
+                  <div className="w-full h-full">
+                    <div className="text-sm">
+                      {format(date, 'd')}
+                    </div>
+                    <div className="mt-6 space-y-1">
+                      {dayTasks.map((task) => (
+                        <div
+                          key={task.id}
+                          className="text-xs p-1.5 rounded bg-blue-100 dark:bg-blue-900/30 text-left truncate"
+                          title={task.title}
+                        >
+                          {task.title}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              },
+            }}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }
