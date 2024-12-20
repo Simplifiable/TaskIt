@@ -1,20 +1,31 @@
 import { Sidebar } from "@/components/ui/sidebar";
 import { NotificationsPopover } from "@/components/NotificationsPopover";
+import { ThemeProvider } from "@/components/theme-provider";
+import { useAuth } from "@/contexts/AuthContext";
+import { Navigate } from "react-router-dom";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 export function Layout({ children }: LayoutProps) {
+  const { user } = useAuth();
+
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex-1 p-8">
-        <div className="mb-6 flex justify-end">
-          <NotificationsPopover />
+    <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
+      <div className="flex min-h-screen w-full">
+        <Sidebar />
+        <div className="flex-1 p-8">
+          <div className="mb-6 flex justify-end">
+            <NotificationsPopover />
+          </div>
+          {children}
         </div>
-        {children}
       </div>
-    </div>
+    </ThemeProvider>
   );
 }
