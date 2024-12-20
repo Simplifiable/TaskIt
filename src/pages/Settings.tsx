@@ -6,13 +6,11 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { updateProfile } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
-import { useTheme } from "next-themes";
 
 export default function Settings() {
   const { user } = useAuth();
   const [displayName, setDisplayName] = useState(user?.displayName || "");
   const { toast } = useToast();
-  const { theme, setTheme } = useTheme();
 
   const handleUpdateProfile = async () => {
     if (!user) return;
@@ -55,27 +53,6 @@ export default function Settings() {
           <Button onClick={handleUpdateProfile}>
             Update Profile
           </Button>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Theme Settings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <Button
-              variant={theme === 'light' ? 'default' : 'outline'}
-              onClick={() => setTheme('light')}
-            >
-              Light Mode
-            </Button>
-            <Button
-              variant={theme === 'dark' ? 'default' : 'outline'}
-              onClick={() => setTheme('dark')}
-            >
-              Dark Mode
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </div>

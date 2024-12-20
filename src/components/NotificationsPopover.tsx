@@ -23,7 +23,7 @@ interface Notification {
 export function NotificationsPopover() {
   const { user } = useAuth();
 
-  const { data: notifications = [] } = useQuery({
+  const { data: notifications = [], isLoading } = useQuery({
     queryKey: ['notifications', user?.uid],
     queryFn: async () => {
       if (!user) return [];
@@ -55,7 +55,9 @@ export function NotificationsPopover() {
         <ScrollArea className="h-80">
           <div className="p-4">
             <h4 className="mb-4 text-sm font-medium leading-none">Notifications</h4>
-            {notifications.length === 0 ? (
+            {isLoading ? (
+              <p className="text-sm text-muted-foreground">Loading notifications...</p>
+            ) : notifications.length === 0 ? (
               <p className="text-sm text-muted-foreground">No notifications yet</p>
             ) : (
               <div className="space-y-4">
