@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format, parseISO } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface Task {
   id: string;
@@ -20,6 +21,7 @@ interface Task {
 export default function Calendar() {
   const { user } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['tasks', user?.uid],
@@ -111,13 +113,14 @@ export default function Calendar() {
                     </div>
                     <div className="mt-6 space-y-1">
                       {dayTasks.map((task) => (
-                        <div
+                        <button
                           key={task.id}
-                          className="text-xs p-1.5 rounded bg-blue-100 dark:bg-blue-900/30 text-left truncate"
+                          onClick={() => setSelectedTask(task)}
+                          className="w-full text-xs p-1.5 rounded bg-blue-100 dark:bg-blue-900/30 text-left truncate hover:bg-blue-200 dark:hover:bg-blue-800/30 transition-colors cursor-pointer"
                           title={task.title}
                         >
                           {task.title}
-                        </div>
+                        </button>
                       ))}
                     </div>
                   </div>
@@ -127,6 +130,27 @@ export default function Calendar() {
           />
         </CardContent>
       </Card>
+
+      <Dialog open={!!selectedTask} onOpenChange={() => setSelectedTask(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{selectedTask?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedTask?.description && (
+              <p className="text-sm text-muted-foreground">{selectedTask.description}</p>
+            )}
+            <div className="flex items-center gap-2">
+              <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                {selectedTask?.tag}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Due: {selectedTask?.dueDate}
+              </span>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
