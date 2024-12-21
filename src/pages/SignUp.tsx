@@ -34,8 +34,8 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md mx-auto">
+    <div className="min-h-[calc(100vh-4rem)] grid place-items-center bg-background px-4">
+      <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle className="text-2xl text-center">Create your TaskIt account</CardTitle>
         </CardHeader>

@@ -9,6 +9,7 @@ import { format, parseISO } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 interface Task {
   id: string;
@@ -44,14 +45,14 @@ export default function Calendar() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex flex-col md:flex-row gap-6">
         <div className="w-full md:w-7/12">
           <Card className="border rounded-lg overflow-hidden">
             <CardContent className="p-0">
               <div className="flex items-center justify-between p-4 border-b">
                 <h2 className="text-lg font-semibold">{format(currentMonth, 'MMMM yyyy')}</h2>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
                   <Button
                     variant="ghost"
                     size="icon"
@@ -61,7 +62,7 @@ export default function Calendar() {
                       setCurrentMonth(newDate);
                     }}
                   >
-                    <ChevronLeft className="h-5 w-5" />
+                    <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <Button
                     variant="ghost"
@@ -72,7 +73,7 @@ export default function Calendar() {
                       setCurrentMonth(newDate);
                     }}
                   >
-                    <ChevronRight className="h-5 w-5" />
+                    <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
@@ -86,10 +87,10 @@ export default function Calendar() {
                   caption: "hidden",
                   table: "w-full border-collapse",
                   head_row: "grid grid-cols-7",
-                  head_cell: "text-muted-foreground font-normal text-sm p-2 text-center",
+                  head_cell: "text-muted-foreground font-normal text-[0.8rem] p-2 text-center",
                   row: "grid grid-cols-7",
-                  cell: "min-h-[120px] p-2 relative border hover:bg-muted/50 transition-colors",
-                  day: "absolute top-2 left-2 font-normal",
+                  cell: "min-h-[100px] p-2 relative border hover:bg-muted/50 transition-colors",
+                  day: "absolute top-2 left-2 font-normal text-sm",
                   day_selected: "bg-transparent text-foreground hover:bg-transparent hover:text-foreground",
                   day_today: "bg-transparent text-primary font-bold hover:bg-transparent",
                 }}
@@ -104,7 +105,7 @@ export default function Calendar() {
                             <button
                               key={task.id}
                               onClick={() => setSelectedTask(task)}
-                              className="w-full text-xs p-1.5 rounded bg-primary/10 text-primary text-left truncate hover:bg-primary/20 transition-colors cursor-pointer"
+                              className="w-full text-xs p-1 rounded bg-primary/10 text-primary text-left truncate hover:bg-primary/20 transition-colors cursor-pointer"
                               title={task.title}
                             >
                               {task.title}
@@ -121,30 +122,31 @@ export default function Calendar() {
 
         <div className="w-full md:w-5/12">
           <Card>
-            <CardHeader>
-              <CardTitle>Tasks for {selectedDate}</CardTitle>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-xl">Tasks for {selectedDate}</CardTitle>
             </CardHeader>
             <CardContent>
               {todaysTasks.length === 0 ? (
                 <p className="text-sm text-muted-foreground">No tasks for today</p>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {todaysTasks.map((task) => (
                     <div
                       key={task.id}
-                      className="flex items-start justify-between p-4 border rounded-lg"
+                      className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
+                      onClick={() => setSelectedTask(task)}
                     >
-                      <div>
+                      <div className="space-y-1">
                         <h3 className="font-medium">{task.title}</h3>
                         {task.description && (
-                          <p className="text-sm text-muted-foreground mt-1">
+                          <p className="text-sm text-muted-foreground">
                             {task.description}
                           </p>
                         )}
-                        <div className="flex items-center gap-2 mt-2">
-                          <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="text-xs">
                             {task.tag}
-                          </span>
+                          </Badge>
                           <span className="text-xs text-muted-foreground">
                             Due: {format(parseISO(task.dueDate), 'h:mm a')}
                           </span>
@@ -169,11 +171,11 @@ export default function Calendar() {
               <p className="text-sm text-muted-foreground">{selectedTask.description}</p>
             )}
             <div className="flex items-center gap-2">
-              <span className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
+              <Badge variant="secondary">
                 {selectedTask?.tag}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                Due: {selectedTask?.dueDate}
+              </Badge>
+              <span className="text-sm text-muted-foreground">
+                Due: {selectedTask?.dueDate && format(parseISO(selectedTask.dueDate), 'PPp')}
               </span>
             </div>
           </div>
