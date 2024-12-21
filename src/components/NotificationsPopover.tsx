@@ -20,6 +20,12 @@ interface Notification {
   read: boolean;
 }
 
+interface Task {
+  id: string;
+  title: string;
+  dueDate: string;
+}
+
 export function NotificationsPopover() {
   const { user } = useAuth();
 
@@ -41,7 +47,6 @@ export function NotificationsPopover() {
     enabled: !!user
   });
 
-  // Query tasks to generate notifications
   const { data: tasks = [] } = useQuery({
     queryKey: ['tasks', user?.uid],
     queryFn: async () => {
@@ -55,12 +60,11 @@ export function NotificationsPopover() {
       return querySnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
-      }));
+      })) as Task[];
     },
     enabled: !!user
   });
 
-  // Generate task notifications
   const taskNotifications = tasks.map(task => {
     const dueDate = parseISO(task.dueDate);
     const daysUntilDue = differenceInDays(dueDate, new Date());

@@ -45,7 +45,7 @@ export function Layout({ children }: LayoutProps) {
     }
   };
 
-  const SidebarContent = () => (
+  const SidebarContentComponent = () => (
     <>
       <SidebarHeader className="flex items-center justify-between px-4">
         <span className="text-lg font-semibold">Task Manager</span>
@@ -68,13 +68,13 @@ export function Layout({ children }: LayoutProps) {
             </SheetTrigger>
             <SheetContent side="left" className="p-0">
               <Sidebar className="border-0">
-                <SidebarContent />
+                <SidebarContentComponent />
               </Sidebar>
             </SheetContent>
           </Sheet>
         ) : (
           <Sidebar>
-            <SidebarContent />
+            <SidebarContentComponent />
           </Sidebar>
         )}
         <div className="flex-1 p-8">
