@@ -54,7 +54,7 @@ export function NotificationsPopover() {
       const q = query(
         collection(db, "tasks"),
         where("userId", "==", user.uid),
-        where("completed", "==", false)
+        where("completed", "==", false)  // Only fetch incomplete tasks
       );
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({

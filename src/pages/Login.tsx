@@ -29,7 +29,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-md mx-auto">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">Welcome back</CardTitle>
           <p className="text-sm text-muted-foreground text-center">

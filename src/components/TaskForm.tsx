@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { format, addDays } from "date-fns";
+import { format, subDays, parse } from "date-fns";
 
 interface TaskFormProps {
   task?: {
@@ -41,7 +41,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
       title: task?.title || "",
       description: task?.description || "",
       dueDate: task?.dueDate || format(new Date(), 'yyyy-MM-dd'),
-      dueTime: task?.dueTime || "12:00",
+      dueTime: task?.dueTime || format(new Date(), 'HH:mm'),
       tag: task?.tag || "",
     },
   });
@@ -49,11 +49,11 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
   const scheduleNotifications = async (taskId: string, dueDate: string, dueTime: string) => {
     if (!user || !notificationsEnabled) return;
 
-    const dueDateObj = new Date(`${dueDate}T${dueTime}`);
-    const twoDaysBefore = addDays(dueDateObj, -2);
-    const oneDayBefore = addDays(dueDateObj, -1);
+    // Combine date and time into a single Date object
+    const dueDateObj = parse(`${dueDate} ${dueTime}`, 'yyyy-MM-dd HH:mm', new Date());
+    const twoDaysBefore = subDays(dueDateObj, 2);
+    const oneDayBefore = subDays(dueDateObj, 1);
 
-    // Schedule notifications
     const notifications = [
       {
         taskId,
@@ -62,6 +62,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
         message: "Task is due in 2 days",
         scheduledFor: twoDaysBefore,
         read: false,
+        timestamp: new Date(),
       },
       {
         taskId,
@@ -70,6 +71,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
         message: "Task is due tomorrow",
         scheduledFor: oneDayBefore,
         read: false,
+        timestamp: new Date(),
       },
       {
         taskId,
@@ -78,6 +80,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
         message: "Task is due today",
         scheduledFor: dueDateObj,
         read: false,
+        timestamp: new Date(),
       },
     ];
 
