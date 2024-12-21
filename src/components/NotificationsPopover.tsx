@@ -100,6 +100,18 @@ export function NotificationsPopover() {
   const allNotifications = [...(notifications || []), ...taskNotifications];
   const unreadCount = allNotifications.filter(n => !n.read).length;
 
+  const formatTimestamp = (timestamp: any) => {
+    if (timestamp?.toDate) {
+      // Handle Firestore timestamp
+      return format(timestamp.toDate(), 'PPp');
+    } else if (timestamp instanceof Date) {
+      // Handle regular Date object
+      return format(timestamp, 'PPp');
+    }
+    // Fallback for any other case
+    return 'Unknown date';
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -132,7 +144,7 @@ export function NotificationsPopover() {
                       {notification.message}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {format(notification.timestamp.toDate(), 'PPp')}
+                      {formatTimestamp(notification.timestamp)}
                     </p>
                   </div>
                 ))}
