@@ -8,7 +8,7 @@ import {
 import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
-import { format, differenceInDays, parseISO } from "date-fns";
+import { format, differenceInHours, parseISO, differenceInDays } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { NotificationsList } from "./notifications/NotificationsList";
 import { Notification, Task } from "@/types/notifications";
@@ -53,30 +53,30 @@ export function NotificationsPopover() {
   });
 
   const taskNotifications = tasks.map(task => {
-    const dueDate = parseISO(task.dueDate);
-    const daysUntilDue = differenceInDays(dueDate, new Date());
+    const dueDatetime = parseISO(`${task.dueDate}T${task.dueTime}`);
+    const hoursUntilDue = differenceInHours(dueDatetime, new Date());
     
-    if (daysUntilDue <= 0) {
+    if (hoursUntilDue <= 0) {
       return {
         id: `task-${task.id}-due`,
-        title: "Task Due Today",
-        message: `The task "${task.title}" is due today!`,
+        title: "Task Due Now",
+        message: `The task "${task.title}" is due now!`,
         timestamp: new Date(),
         read: false
       };
-    } else if (daysUntilDue === 1) {
+    } else if (hoursUntilDue <= 24) {
       return {
         id: `task-${task.id}-1day`,
-        title: "Task Due Tomorrow",
-        message: `The task "${task.title}" is due tomorrow!`,
+        title: "Task Due Soon",
+        message: `The task "${task.title}" is due in ${hoursUntilDue} hours!`,
         timestamp: new Date(),
         read: false
       };
-    } else if (daysUntilDue === 2) {
+    } else if (hoursUntilDue <= 48) {
       return {
         id: `task-${task.id}-2days`,
         title: "Task Due Soon",
-        message: `The task "${task.title}" is due in 2 days!`,
+        message: `The task "${task.title}" is due in ${Math.floor(hoursUntilDue / 24)} days!`,
         timestamp: new Date(),
         read: false
       };

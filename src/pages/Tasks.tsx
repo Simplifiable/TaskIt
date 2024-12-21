@@ -6,7 +6,7 @@ import { TaskForm } from "@/components/TaskForm";
 import { collection, query, where, getDocs, deleteDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
-import { format, parseISO, isBefore, formatDistanceToNow } from "date-fns";
+import { format, parseISO, isBefore, formatDistanceToNow, differenceInHours } from "date-fns";
 import { CheckCircle2, Circle, Search, Pencil, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
@@ -17,8 +17,10 @@ interface Task {
   title: string;
   description?: string;
   dueDate: string;
+  dueTime: string;
   tag: string;
   completed: boolean;
+  completedAt?: Date;
 }
 
 export default function Tasks() {
@@ -34,12 +36,23 @@ export default function Tasks() {
     queryKey: ['tasks', user?.uid],
     queryFn: async () => {
       if (!user) return [];
-      const q = query(collection(db, "tasks"), where("userId", "==", user.uid));
+      const q = query(
+        collection(db, "tasks"),
+        where("userId", "==", user.uid)
+      );
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as Task[];
+      return querySnapshot.docs
+        .map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }))
+        .filter((task: any) => {
+          if (!task.completed) return true;
+          const completedDate = task.completedAt?.toDate();
+          if (!completedDate) return true;
+          const hoursSinceCompletion = differenceInHours(new Date(), completedDate);
+          return hoursSinceCompletion < 24;
+        }) as Task[];
     },
     enabled: !!user
   });
@@ -47,7 +60,10 @@ export default function Tasks() {
   const handleTaskComplete = async (taskId: string, completed: boolean) => {
     try {
       const taskRef = doc(db, "tasks", taskId);
-      await updateDoc(taskRef, { completed: !completed });
+      await updateDoc(taskRef, { 
+        completed: !completed,
+        completedAt: !completed ? new Date() : null
+      });
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       toast({
         title: completed ? "Task marked as incomplete" : "Task marked as complete",

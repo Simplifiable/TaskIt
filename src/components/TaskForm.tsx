@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { format, subDays, parse } from "date-fns";
+import { format, subDays, parse, differenceInHours } from "date-fns";
 
 interface TaskFormProps {
   task?: {
@@ -49,40 +49,44 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
   const scheduleNotifications = async (taskId: string, dueDate: string, dueTime: string) => {
     if (!user || !notificationsEnabled) return;
 
-    // Combine date and time into a single Date object
-    const dueDateObj = parse(`${dueDate} ${dueTime}`, 'yyyy-MM-dd HH:mm', new Date());
-    const twoDaysBefore = subDays(dueDateObj, 2);
-    const oneDayBefore = subDays(dueDateObj, 1);
+    const dueDatetime = parseISO(`${dueDate}T${dueTime}`);
+    const hoursUntilDue = differenceInHours(dueDatetime, new Date());
 
-    const notifications = [
-      {
+    const notifications = [];
+
+    if (hoursUntilDue > 48) {
+      notifications.push({
         taskId,
         userId: user.uid,
         title: "Task Due Soon",
         message: "Task is due in 2 days",
-        scheduledFor: twoDaysBefore,
+        scheduledFor: dueDatetime,
         read: false,
         timestamp: new Date(),
-      },
-      {
+      });
+    }
+
+    if (hoursUntilDue > 24) {
+      notifications.push({
         taskId,
         userId: user.uid,
         title: "Task Due Tomorrow",
-        message: "Task is due tomorrow",
-        scheduledFor: oneDayBefore,
+        message: "Task is due in 24 hours",
+        scheduledFor: dueDatetime,
         read: false,
         timestamp: new Date(),
-      },
-      {
-        taskId,
-        userId: user.uid,
-        title: "Task Due Today",
-        message: "Task is due today",
-        scheduledFor: dueDateObj,
-        read: false,
-        timestamp: new Date(),
-      },
-    ];
+      });
+    }
+
+    notifications.push({
+      taskId,
+      userId: user.uid,
+      title: "Task Due Now",
+      message: "Task is due now",
+      scheduledFor: dueDatetime,
+      read: false,
+      timestamp: new Date(),
+    });
 
     for (const notification of notifications) {
       await addDoc(collection(db, "notifications"), notification);
