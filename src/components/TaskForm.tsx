@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { format, subDays, parse, differenceInHours } from "date-fns";
+import { format, subDays, parse, differenceInHours, parseISO } from "date-fns";
 
 interface TaskFormProps {
   task?: {
@@ -203,3 +203,4 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
     </form>
   );
 }
+
