@@ -1,15 +1,17 @@
+import { useState } from "react";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { CalendarCell } from "@/components/calendar/CalendarCell";
+import { TasksList } from "@/components/calendar/TasksList";
 
 interface Task {
   id: string;
@@ -24,6 +26,8 @@ export default function Calendar() {
   const { user } = useAuth();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedTasks, setSelectedTasks] = useState<Task[]>([]);
 
   const { data: tasks = [] } = useQuery({
     queryKey: ['tasks', user?.uid],
@@ -39,10 +43,10 @@ export default function Calendar() {
     enabled: !!user
   });
 
-  const selectedDate = format(new Date(), 'MMMM d, yyyy');
-  const todaysTasks = tasks.filter(task => 
-    format(parseISO(task.dueDate), 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd')
-  );
+  const handleTasksClick = (date: Date, tasksForDate: Task[]) => {
+    setSelectedDate(date);
+    setSelectedTasks(tasksForDate);
+  };
 
   return (
     <div className="space-y-6 p-6">
@@ -96,23 +100,11 @@ export default function Calendar() {
                 }}
                 components={{
                   DayContent: ({ date }) => (
-                    <div className="w-full h-full">
-                      <span>{format(date, 'd')}</span>
-                      <div className="mt-6 space-y-1">
-                        {tasks
-                          .filter(task => format(parseISO(task.dueDate), 'yyyy-MM-dd') === format(date, 'yyyy-MM-dd'))
-                          .map((task) => (
-                            <button
-                              key={task.id}
-                              onClick={() => setSelectedTask(task)}
-                              className="w-full text-xs p-1 rounded bg-primary/10 text-primary text-left truncate hover:bg-primary/20 transition-colors cursor-pointer"
-                              title={task.title}
-                            >
-                              {task.title}
-                            </button>
-                          ))}
-                      </div>
-                    </div>
+                    <CalendarCell
+                      date={date}
+                      tasks={tasks}
+                      onTasksClick={handleTasksClick}
+                    />
                   ),
                 }}
               />
@@ -121,43 +113,11 @@ export default function Calendar() {
         </div>
 
         <div className="w-full md:w-5/12">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-xl">Tasks for {selectedDate}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {todaysTasks.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No tasks for today</p>
-              ) : (
-                <div className="space-y-3">
-                  {todaysTasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className="flex items-start justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
-                      onClick={() => setSelectedTask(task)}
-                    >
-                      <div className="space-y-1">
-                        <h3 className="font-medium">{task.title}</h3>
-                        {task.description && (
-                          <p className="text-sm text-muted-foreground">
-                            {task.description}
-                          </p>
-                        )}
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="text-xs">
-                            {task.tag}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            Due: {format(parseISO(task.dueDate), 'h:mm a')}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <TasksList
+            date={selectedDate}
+            tasks={selectedTasks}
+            onTaskClick={setSelectedTask}
+          />
         </div>
       </div>
 
@@ -175,7 +135,7 @@ export default function Calendar() {
                 {selectedTask?.tag}
               </Badge>
               <span className="text-sm text-muted-foreground">
-                Due: {selectedTask?.dueDate && format(parseISO(selectedTask.dueDate), 'PPp')}
+                Due: {selectedTask?.dueDate && format(new Date(selectedTask.dueDate), 'PPp')}
               </span>
             </div>
           </div>

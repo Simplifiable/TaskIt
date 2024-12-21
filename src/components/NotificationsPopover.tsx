@@ -5,26 +5,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useQuery } from "@tanstack/react-query";
 import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
 import { format, differenceInDays, parseISO } from "date-fns";
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  timestamp: any;
-  read: boolean;
-}
-
-interface Task {
-  id: string;
-  title: string;
-  dueDate: string;
-}
+import { useQuery } from "@tanstack/react-query";
+import { NotificationsList } from "./notifications/NotificationsList";
+import { Notification, Task } from "@/types/notifications";
 
 export function NotificationsPopover() {
   const { user } = useAuth();
@@ -54,7 +41,7 @@ export function NotificationsPopover() {
       const q = query(
         collection(db, "tasks"),
         where("userId", "==", user.uid),
-        where("completed", "==", false)  // Only fetch incomplete tasks
+        where("completed", "==", false)
       );
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({
@@ -97,18 +84,15 @@ export function NotificationsPopover() {
     return null;
   }).filter(Boolean) as Notification[];
 
-  const allNotifications = [...(notifications || []), ...taskNotifications];
+  const allNotifications = [...notifications, ...taskNotifications];
   const unreadCount = allNotifications.filter(n => !n.read).length;
 
   const formatTimestamp = (timestamp: any) => {
     if (timestamp?.toDate) {
-      // Handle Firestore timestamp
       return format(timestamp.toDate(), 'PPp');
     } else if (timestamp instanceof Date) {
-      // Handle regular Date object
       return format(timestamp, 'PPp');
     }
-    // Fallback for any other case
     return 'Unknown date';
   };
 
@@ -125,33 +109,11 @@ export function NotificationsPopover() {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0">
-        <ScrollArea className="h-80">
-          <div className="p-4">
-            <h4 className="mb-4 text-sm font-medium leading-none">Notifications</h4>
-            {isLoading ? (
-              <p className="text-sm text-muted-foreground">Loading notifications...</p>
-            ) : allNotifications.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No notifications yet</p>
-            ) : (
-              <div className="space-y-4">
-                {allNotifications.map((notification) => (
-                  <div
-                    key={notification.id}
-                    className="flex flex-col space-y-1 border-b pb-4 last:border-0"
-                  >
-                    <p className="text-sm font-medium">{notification.title}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {notification.message}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {formatTimestamp(notification.timestamp)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </ScrollArea>
+        <NotificationsList
+          notifications={allNotifications}
+          isLoading={isLoading}
+          formatTimestamp={formatTimestamp}
+        />
       </PopoverContent>
     </Popover>
   );
