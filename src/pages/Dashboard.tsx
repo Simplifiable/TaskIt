@@ -16,6 +16,7 @@ interface Task {
   title: string;
   description?: string;
   dueDate: string;
+  dueTime: string;
   tag: string;
   completed: boolean;
 }
@@ -60,14 +61,22 @@ export default function Dashboard() {
 
   const filterTasks = (filterFn: (date: Date) => boolean) => {
     return tasks.filter(task => {
-      const dueDate = parseISO(task.dueDate);
-      return filterFn(dueDate);
+      const dueDateTime = parseISO(`${task.dueDate}T${task.dueTime}`);
+      return filterFn(dueDateTime);
     });
   };
 
   const todayTasks = filterTasks(isToday);
   const tomorrowTasks = filterTasks(isTomorrow);
   const overdueTasks = filterTasks(date => isBefore(date, new Date()) && !isToday(date));
+
+  const getFormattedDueDateTime = (task: Task) => {
+    const dateTime = parseISO(`${task.dueDate}T${task.dueTime}`);
+    if (isBefore(dateTime, new Date())) {
+      return `Overdue by ${formatDistanceToNow(dateTime)}`;
+    }
+    return `Due ${formatDistanceToNow(dateTime, { addSuffix: true })}`;
+  };
 
   const TaskCard = ({ task }: { task: Task }) => (
     <div key={task.id} className="p-4 border rounded-lg mb-2 bg-card hover:bg-accent/50 transition-colors">
@@ -84,7 +93,7 @@ export default function Dashboard() {
               {task.tag}
             </span>
             <span className="text-xs text-muted-foreground">
-              Due {formatDistanceToNow(parseISO(task.dueDate), { addSuffix: true })}
+              {getFormattedDueDateTime(task)}
             </span>
           </div>
         </div>
