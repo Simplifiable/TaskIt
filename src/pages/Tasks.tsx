@@ -118,6 +118,14 @@ export default function Tasks() {
     parseISO(a).getTime() - parseISO(b).getTime()
   );
 
+  const getFormattedDueDateTime = (task: Task) => {
+    const dateTime = parseISO(`${task.dueDate}T${task.dueTime}`);
+    if (isBefore(dateTime, new Date())) {
+      return `Overdue by ${formatDistanceToNow(dateTime)}`;
+    }
+    return `Due ${formatDistanceToNow(dateTime, { addSuffix: true })}`;
+  };
+
   const TaskCard = ({ task }: { task: Task }) => (
     <div className="p-4 border rounded-lg mb-2 bg-card hover:bg-accent/50 transition-colors">
       <div className="flex items-start justify-between gap-2">
@@ -133,10 +141,7 @@ export default function Tasks() {
               {task.tag}
             </span>
             <span className="text-xs text-muted-foreground">
-              {isBefore(parseISO(task.dueDate), new Date()) 
-                ? `Overdue by ${formatDistanceToNow(parseISO(task.dueDate))}`
-                : `Due ${formatDistanceToNow(parseISO(task.dueDate), { addSuffix: true })}`
-              }
+              {getFormattedDueDateTime(task)}
             </span>
           </div>
         </div>
