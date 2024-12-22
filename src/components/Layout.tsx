@@ -68,7 +68,7 @@ export function Layout({ children }: LayoutProps) {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="p-0">
-                <Sidebar className="border-0">
+                <Sidebar className="border-0 w-full">
                   <SidebarContentComponent />
                 </Sidebar>
               </SheetContent>
