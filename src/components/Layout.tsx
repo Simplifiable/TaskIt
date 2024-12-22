@@ -60,45 +60,63 @@ export function Layout({ children }: LayoutProps) {
     <ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
       <div className="flex min-h-screen w-full">
         {isMobile ? (
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="md:hidden">
-                <Menu className="h-5 w-5" />
+          <div className="fixed top-0 left-0 z-50 w-full bg-background border-b p-2 flex items-center gap-2">
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="p-0">
+                <Sidebar className="border-0">
+                  <SidebarContentComponent />
+                </Sidebar>
+              </SheetContent>
+            </Sheet>
+            <span className="text-lg font-semibold flex-1">Task Manager</span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+              >
+                {theme === "light" ? (
+                  <Moon className="h-[1.2rem] w-[1.2rem]" />
+                ) : (
+                  <Sun className="h-[1.2rem] w-[1.2rem]" />
+                )}
               </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="p-0">
-              <Sidebar className="border-0">
-                <SidebarContentComponent />
-              </Sidebar>
-            </SheetContent>
-          </Sheet>
+              <NotificationsPopover />
+              <Button variant="ghost" size="icon" onClick={handleLogout}>
+                <LogOut className="h-[1.2rem] w-[1.2rem]" />
+              </Button>
+            </div>
+          </div>
         ) : (
           <Sidebar>
             <SidebarContentComponent />
           </Sidebar>
         )}
-        <div className="flex-1 p-8">
-          <div className="mb-6 flex justify-end items-center gap-4">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-            >
-              {theme === "light" ? (
-                <Moon className="h-[1.2rem] w-[1.2rem]" />
-              ) : (
-                <Sun className="h-[1.2rem] w-[1.2rem]" />
-              )}
-            </Button>
-            <NotificationsPopover />
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleLogout}
-            >
-              <LogOut className="h-[1.2rem] w-[1.2rem]" />
-            </Button>
-          </div>
+        <div className={`flex-1 ${isMobile ? "pt-16" : ""} p-8`}>
+          {!isMobile && (
+            <div className="mb-6 flex justify-end items-center gap-4">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+              >
+                {theme === "light" ? (
+                  <Moon className="h-[1.2rem] w-[1.2rem]" />
+                ) : (
+                  <Sun className="h-[1.2rem] w-[1.2rem]" />
+                )}
+              </Button>
+              <NotificationsPopover />
+              <Button variant="outline" size="icon" onClick={handleLogout}>
+                <LogOut className="h-[1.2rem] w-[1.2rem]" />
+              </Button>
+            </div>
+          )}
           {children}
         </div>
       </div>
