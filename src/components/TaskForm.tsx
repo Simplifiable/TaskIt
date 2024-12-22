@@ -49,7 +49,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
   const scheduleNotifications = async (taskId: string, dueDate: string, dueTime: string) => {
     if (!user || !notificationsEnabled) return;
 
-    const dueDatetime = parseISO(`${dueDate}T${dueTime}`);
+    const dueDatetime = parse(`${dueDate} ${dueTime}`, 'yyyy-MM-dd HH:mm', new Date());
     const hoursUntilDue = differenceInHours(dueDatetime, new Date());
 
     const notifications = [];
@@ -203,4 +203,3 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
     </form>
   );
 }
-
