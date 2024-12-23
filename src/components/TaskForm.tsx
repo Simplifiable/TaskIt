@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { startOfToday, parseISO, isBefore } from "date-fns";
+import { startOfToday, parseISO, isBefore, parse, differenceInHours } from "date-fns";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required").max(50, "Title must be 50 characters or less"),
