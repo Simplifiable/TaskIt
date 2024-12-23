@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { updateProfile, updateEmail } from "firebase/auth";
+import { updateProfile, verifyBeforeUpdateEmail } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -35,22 +35,28 @@ export default function Settings() {
     if (!user) return;
 
     try {
+      // Update display name
       await updateProfile(user, {
         displayName: data.displayName,
       });
 
+      // Handle email update
       if (data.email !== user.email) {
-        await updateEmail(user, data.email);
+        await verifyBeforeUpdateEmail(user, data.email);
+        toast({
+          title: "Verification Email Sent",
+          description: "Please check your email to verify the new address before the change takes effect.",
+        });
+      } else {
+        toast({
+          title: "Profile updated",
+          description: "Your display name has been updated successfully"
+        });
       }
-
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully"
-      });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "Failed to update profile",
+        description: error.message || "Failed to update profile",
         variant: "destructive"
       });
     }
