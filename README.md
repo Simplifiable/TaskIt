@@ -2,19 +2,9 @@
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/1dbaf5b1-666d-415e-b327-23cd38c415eb
+**URL**: https://manageable-tasks-hub-12.lovable.app/
 
 ## How can I edit this code?
-
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/1dbaf5b1-666d-415e-b327-23cd38c415eb) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
 
 If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
