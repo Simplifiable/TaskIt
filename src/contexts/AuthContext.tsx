@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth } from "@/lib/firebase";
-import { User, onAuthStateChanged } from "firebase/auth";
+import { User, onAuthStateChanged, onIdTokenChanged } from "firebase/auth";
 
 interface AuthContextType {
   user: User | null;
@@ -14,12 +14,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
     });
 
-    return unsubscribe;
+    // Add token refresh listener
+    const unsubscribeToken = onIdTokenChanged(auth, async (user) => {
+      if (user) {
+        // Force token refresh
+        await user.getIdToken(true);
+      }
+      setUser(user);
+    });
+
+    return () => {
+      unsubscribeAuth();
+      unsubscribeToken();
+    };
   }, []);
 
   return (
