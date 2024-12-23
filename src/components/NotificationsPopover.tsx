@@ -52,37 +52,39 @@ export function NotificationsPopover() {
     enabled: !!user
   });
 
-  const taskNotifications = tasks.map(task => {
-    const dueDatetime = parseISO(`${task.dueDate}T${task.dueTime}`);
-    const hoursUntilDue = differenceInHours(dueDatetime, new Date());
-    
-    if (hoursUntilDue <= 0) {
-      return {
-        id: `task-${task.id}-due`,
-        title: "Task Due Now",
-        message: `The task "${task.title}" is due now!`,
-        timestamp: new Date(),
-        read: false
-      };
-    } else if (hoursUntilDue <= 24) {
-      return {
-        id: `task-${task.id}-1day`,
-        title: "Task Due Soon",
-        message: `The task "${task.title}" is due in ${hoursUntilDue} hours!`,
-        timestamp: new Date(),
-        read: false
-      };
-    } else if (hoursUntilDue <= 48) {
-      return {
-        id: `task-${task.id}-2days`,
-        title: "Task Due Soon",
-        message: `The task "${task.title}" is due in ${Math.floor(hoursUntilDue / 24)} days!`,
-        timestamp: new Date(),
-        read: false
-      };
-    }
-    return null;
-  }).filter(Boolean) as Notification[];
+  const taskNotifications = tasks
+    .filter(task => task.notificationsEnabled !== false) // Only include tasks with notifications enabled
+    .map(task => {
+      const dueDatetime = parseISO(`${task.dueDate}T${task.dueTime}`);
+      const hoursUntilDue = differenceInHours(dueDatetime, new Date());
+      
+      if (hoursUntilDue <= 0) {
+        return {
+          id: `task-${task.id}-due`,
+          title: "Task Due Now",
+          message: `The task "${task.title}" is due now!`,
+          timestamp: new Date(),
+          read: false
+        };
+      } else if (hoursUntilDue <= 24) {
+        return {
+          id: `task-${task.id}-1day`,
+          title: "Task Due Soon",
+          message: `The task "${task.title}" is due in ${hoursUntilDue} hours!`,
+          timestamp: new Date(),
+          read: false
+        };
+      } else if (hoursUntilDue <= 48) {
+        return {
+          id: `task-${task.id}-2days`,
+          title: "Task Due Soon",
+          message: `The task "${task.title}" is due in ${Math.floor(hoursUntilDue / 24)} days!`,
+          timestamp: new Date(),
+          read: false
+        };
+      }
+      return null;
+    }).filter(Boolean) as Notification[];
 
   const allNotifications = [...notifications, ...taskNotifications];
   const unreadCount = allNotifications.filter(n => !n.read).length;

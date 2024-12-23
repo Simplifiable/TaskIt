@@ -13,4 +13,5 @@ export interface Task {
   dueTime: string;
   completed: boolean;
   completedAt?: Date;
+  notificationsEnabled?: boolean;
 }
