@@ -8,7 +8,7 @@ import {
 import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/contexts/AuthContext";
-import { format, differenceInHours, parseISO, differenceInDays } from "date-fns";
+import { format, differenceInHours, parseISO } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { NotificationsList } from "./notifications/NotificationsList";
 import { Notification, Task } from "@/types/notifications";
@@ -41,7 +41,7 @@ export function NotificationsPopover() {
       const q = query(
         collection(db, "tasks"),
         where("userId", "==", user.uid),
-        where("completed", "==", false)
+        where("completed", "==", false),
       );
       const querySnapshot = await getDocs(q);
       return querySnapshot.docs.map(doc => ({
@@ -53,7 +53,10 @@ export function NotificationsPopover() {
   });
 
   const taskNotifications = tasks
-    .filter(task => task.notificationsEnabled !== false) // Only include tasks with notifications enabled
+    .filter(task => {
+      // Only include tasks that explicitly have notifications enabled
+      return task.notificationsEnabled === true;
+    })
     .map(task => {
       const dueDatetime = parseISO(`${task.dueDate}T${task.dueTime}`);
       const hoursUntilDue = differenceInHours(dueDatetime, new Date());
