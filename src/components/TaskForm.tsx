@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +11,19 @@ import { useAuth } from "@/contexts/AuthContext";
 import { db } from "@/lib/firebase";
 import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
-import { format, subDays, parse, differenceInHours, parseISO } from "date-fns";
+import { startOfToday, parseISO, isBefore } from "date-fns";
+
+const taskSchema = z.object({
+  title: z.string().min(1, "Title is required").max(50, "Title must be 50 characters or less"),
+  description: z.string().max(500, "Description must be 500 characters or less").optional(),
+  dueDate: z.string().refine((date) => {
+    return !isBefore(parseISO(date), startOfToday());
+  }, "Due date cannot be in the past"),
+  dueTime: z.string(),
+  tag: z.string().max(50, "Tag must be 50 characters or less"),
+});
+
+type TaskFormData = z.infer<typeof taskSchema>;
 
 interface TaskFormProps {
   task?: {
@@ -23,25 +37,18 @@ interface TaskFormProps {
   onClose: () => void;
 }
 
-interface TaskFormData {
-  title: string;
-  description: string;
-  dueDate: string;
-  dueTime: string;
-  tag: string;
-}
-
 export function TaskForm({ task, onClose }: TaskFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
-  const { register, handleSubmit } = useForm<TaskFormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<TaskFormData>({
+    resolver: zodResolver(taskSchema),
     defaultValues: {
       title: task?.title || "",
       description: task?.description || "",
-      dueDate: task?.dueDate || format(new Date(), 'yyyy-MM-dd'),
-      dueTime: task?.dueTime || format(new Date(), 'HH:mm'),
+      dueDate: task?.dueDate || new Date().toISOString().split('T')[0],
+      dueTime: task?.dueTime || new Date().toTimeString().slice(0, 5),
       tag: task?.tag || "",
     },
   });
@@ -158,11 +165,17 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="title">Title</Label>
-        <Input id="title" {...register("title", { required: true })} />
+        <Input id="title" {...register("title")} />
+        {errors.title && (
+          <p className="text-sm text-destructive">{errors.title.message}</p>
+        )}
       </div>
       <div className="space-y-2">
         <Label htmlFor="description">Description</Label>
         <Textarea id="description" {...register("description")} />
+        {errors.description && (
+          <p className="text-sm text-destructive">{errors.description.message}</p>
+        )}
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
@@ -170,21 +183,30 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
           <Input
             id="dueDate"
             type="date"
-            {...register("dueDate", { required: true })}
+            {...register("dueDate")}
           />
+          {errors.dueDate && (
+            <p className="text-sm text-destructive">{errors.dueDate.message}</p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="dueTime">Due Time</Label>
           <Input
             id="dueTime"
             type="time"
-            {...register("dueTime", { required: true })}
+            {...register("dueTime")}
           />
+          {errors.dueTime && (
+            <p className="text-sm text-destructive">{errors.dueTime.message}</p>
+          )}
         </div>
       </div>
       <div className="space-y-2">
         <Label htmlFor="tag">Tag</Label>
-        <Input id="tag" {...register("tag", { required: true })} />
+        <Input id="tag" {...register("tag")} />
+        {errors.tag && (
+          <p className="text-sm text-destructive">{errors.tag.message}</p>
+        )}
       </div>
       <div className="flex items-center space-x-2">
         <Switch

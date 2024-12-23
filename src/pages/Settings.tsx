@@ -4,21 +4,44 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
-import { updateProfile } from "firebase/auth";
+import { updateProfile, updateEmail } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const profileSchema = z.object({
+  displayName: z.string()
+    .min(3, "Display name must be at least 3 characters")
+    .max(20, "Display name must be 20 characters or less"),
+  email: z.string().email("Invalid email address"),
+});
+
+type ProfileFormData = z.infer<typeof profileSchema>;
 
 export default function Settings() {
   const { user } = useAuth();
-  const [displayName, setDisplayName] = useState(user?.displayName || "");
   const { toast } = useToast();
+  
+  const { register, handleSubmit, formState: { errors } } = useForm<ProfileFormData>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      displayName: user?.displayName || "",
+      email: user?.email || "",
+    },
+  });
 
-  const handleUpdateProfile = async () => {
+  const handleUpdateProfile = async (data: ProfileFormData) => {
     if (!user) return;
 
     try {
       await updateProfile(user, {
-        displayName,
+        displayName: data.displayName,
       });
+
+      if (data.email !== user.email) {
+        await updateEmail(user, data.email);
+      }
 
       toast({
         title: "Profile updated",
@@ -40,19 +63,33 @@ export default function Settings() {
         <CardHeader>
           <CardTitle>Profile Settings</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Display Name</Label>
-            <Input
-              id="name"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Enter your display name"
-            />
-          </div>
-          <Button onClick={handleUpdateProfile}>
-            Update Profile
-          </Button>
+        <CardContent>
+          <form onSubmit={handleSubmit(handleUpdateProfile)} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="displayName">Display Name</Label>
+              <Input
+                id="displayName"
+                {...register("displayName")}
+              />
+              {errors.displayName && (
+                <p className="text-sm text-destructive">{errors.displayName.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                {...register("email")}
+              />
+              {errors.email && (
+                <p className="text-sm text-destructive">{errors.email.message}</p>
+              )}
+            </div>
+            <Button type="submit">
+              Update Profile
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>
