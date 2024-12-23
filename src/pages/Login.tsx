@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, AuthError } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,20 +10,36 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+
     try {
       await signInWithEmailAndPassword(auth, email, password);
       navigate("/");
     } catch (error) {
+      const authError = error as AuthError;
+      let errorMessage = "An error occurred during login";
+
+      if (authError.code === "auth/invalid-login-credentials") {
+        errorMessage = "Invalid email or password";
+      } else if (authError.code === "auth/network-request-failed") {
+        errorMessage = "Network error. Please check your internet connection";
+      } else if (authError.code === "auth/too-many-requests") {
+        errorMessage = "Too many failed attempts. Please try again later";
+      }
+
       toast({
-        title: "Error",
-        description: "Invalid email or password",
+        title: "Login Failed",
+        description: errorMessage,
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -50,6 +66,7 @@ export default function Login() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full"
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -64,10 +81,11 @@ export default function Login() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="w-full"
+                disabled={isLoading}
               />
             </div>
-            <Button type="submit" className="w-full">
-              Sign In
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
