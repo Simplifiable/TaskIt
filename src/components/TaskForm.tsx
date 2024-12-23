@@ -109,6 +109,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
         await updateDoc(taskRef, {
           ...data,
           updatedAt: new Date(),
+          notificationsEnabled, // Add this line to store the notifications preference
         });
 
         if (notificationsEnabled) {
@@ -132,6 +133,7 @@ export function TaskForm({ task, onClose }: TaskFormProps) {
           userId: user.uid,
           completed: false,
           createdAt: new Date(),
+          notificationsEnabled, // Add this line to store the notifications preference
         });
 
         if (notificationsEnabled) {
