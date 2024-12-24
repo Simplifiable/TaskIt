@@ -4,6 +4,45 @@
 
 **URL**: https://manageable-tasks-hub-12.lovable.app/
 
+## Technology Stack (IEEE SRS Format)
+
+### 1. Frontend Framework and Core Technologies
+- **React 18.3.1**: Core frontend library for building user interfaces
+- **TypeScript**: Superset of JavaScript for type-safe development
+- **Vite 5.4.1**: Next-generation frontend tooling and build system
+
+### 2. UI/UX Technologies
+- **Tailwind CSS 3.4.11**: Utility-first CSS framework
+- **shadcn/ui**: High-quality React components built with Radix UI and Tailwind
+- **Lucide React**: Icon library for modern web applications
+- **Recharts**: Composable charting library for React
+
+### 3. State Management and Data Fetching
+- **@tanstack/react-query**: Powerful data synchronization for React
+- **React Hook Form**: Form state management and validation
+- **Zod**: TypeScript-first schema validation
+
+### 4. Backend and Authentication
+- **Firebase 11.1.0**: Backend-as-a-Service (BaaS)
+  - Authentication
+  - Firestore Database
+  - Cloud Functions
+  - Hosting
+
+### 5. Date and Time Handling
+- **date-fns**: Modern JavaScript date utility library
+
+### 6. UI Enhancement Libraries
+- **Sonner**: Toast notifications
+- **Embla Carousel**: Carousel/slider component
+- **Vaul**: Drawer component
+- **React Day Picker**: Flexible date picker
+
+### 7. Development and Build Tools
+- **ESLint**: Code linting and static analysis
+- **PostCSS**: CSS transformation tool
+- **SWC**: Rust-based platform for fast web compilation
+
 ## How can I edit this code?
 
 Follow these steps:
@@ -35,13 +74,3 @@ npm run dev
 - Select the "Codespaces" tab.
 - Click on "New codespace" to launch a new Codespace environment.
 - Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
