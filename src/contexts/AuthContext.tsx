@@ -23,16 +23,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshToken = async () => {
     try {
       if (!user) return null;
+      
+      // Force token refresh
       const token = await user.getIdToken(true);
       return token;
     } catch (error: any) {
+      console.error("Token refresh error:", error);
+      
       if (error.code === 'auth/network-request-failed') {
         toast({
           title: "Network Error",
           description: "Please check your internet connection",
           variant: "destructive",
         });
-      } else if (error.code === 'auth/requires-recent-login') {
+      } else if (error.code === 'auth/requires-recent-login' || 
+                 error.message?.includes('TOKEN_EXPIRED')) {
         toast({
           title: "Session Expired",
           description: "Please log in again to continue",
@@ -40,19 +45,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
         // Force logout on session expiration
         await auth.signOut();
+        setUser(null);
       }
       return null;
     }
   };
 
   useEffect(() => {
+    let tokenRefreshInterval: NodeJS.Timeout;
+
     const unsubscribeAuth = onAuthStateChanged(auth, async (user) => {
       try {
         if (user) {
-          // Attempt to refresh token on auth state change
+          // Immediate token refresh on auth state change
           await refreshToken();
+          setUser(user);
+          
+          // Set up periodic token refresh every 30 minutes
+          tokenRefreshInterval = setInterval(refreshToken, 30 * 60 * 1000);
+        } else {
+          setUser(null);
+          if (tokenRefreshInterval) {
+            clearInterval(tokenRefreshInterval);
+          }
         }
-        setUser(user);
       } catch (error) {
         console.error("Auth state change error:", error);
         setUser(null);
@@ -64,9 +80,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsubscribeToken = onIdTokenChanged(auth, async (user) => {
       try {
         if (user) {
-          await user.getIdToken(true);
+          const token = await user.getIdToken(true);
+          if (token) {
+            setUser(user);
+          }
+        } else {
+          setUser(null);
         }
-        setUser(user);
       } catch (error) {
         console.error("Token refresh error:", error);
         if (user) {
@@ -76,17 +96,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             variant: "destructive",
           });
           await auth.signOut();
+          setUser(null);
         }
       }
     });
 
-    // Periodic token refresh every 30 minutes
-    const tokenRefreshInterval = setInterval(refreshToken, 30 * 60 * 1000);
-
     return () => {
       unsubscribeAuth();
       unsubscribeToken();
-      clearInterval(tokenRefreshInterval);
+      if (tokenRefreshInterval) {
+        clearInterval(tokenRefreshInterval);
+      }
     };
   }, []);
 
