@@ -43,6 +43,11 @@
 - **PostCSS**: CSS transformation tool
 - **SWC**: Rust-based platform for fast web compilation
 
+### 8. Implementation
+- **Lovable**: It has been used as an online IDE/compiler to run and test the code as well as the deployment.
+               It's not mainly used for that purpose, but we found it to be helpful in this scenario without 
+               having to care too much of the implementation and code handling.
+
 ## How can I edit this code?
 
 Follow these steps:
